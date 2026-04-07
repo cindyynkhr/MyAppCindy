@@ -1,9 +1,10 @@
-import { signIn, signInWithGoogle } from "@/utils/db/servicefirebase";
+import { signIn } from "@/utils/db/servicefirebase";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import googleProvider from "next-auth/providers/google";
-import githubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
+import { signInWithGoogle } from "@/utils/db/servicefirebase";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -14,145 +15,88 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        fullName: { label: "Full Name", type: "text" },
+        fullname: { label: "Full Name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        try {
-          console.log("[AUTH] Credentials received:", credentials?.email);
-          
-          if (!credentials?.email || !credentials.password) {
-            console.log("[AUTH] Missing email or password");
-            return null;
-          }
-
-          const user: any = await signIn(credentials.email);
-          console.log("[AUTH] User found:", user ? "yes" : "no");
+        if (!credentials?.email || !credentials.password) return null;
+          const user:any = await signIn(credentials.email);
 
           if (user) {
             const isPasswordValid = await bcrypt.compare(
               credentials.password, 
               user.password,
             );
-            console.log("[AUTH] Password valid:", isPasswordValid);
-
             if (isPasswordValid) {
-              const userData = {
+              return {
                 id: user.id,
                 email: user.email,
-                fullName: user.fullName || "",
-                role: user.role || "user",
+                fullname: user.fullname,
+                role: user.role,
               };
-              console.log("[AUTH] Login successful for:", user.email);
-              return userData;
             }
           }
-          console.log("[AUTH] Login failed");
           return null;
-        } catch (error) {
-          console.error("[AUTH] Credentials authorization error:", error);
-          return null;
-        }
       },
     }),
-
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
-      googleProvider({
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      })
-    ] : []),
-
-    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET ? [
-      githubProvider({
-        clientId: process.env.GITHUB_CLIENT_ID,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      })
-    ] : []),
-
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+    }),
   ],
+
   callbacks: {
     async jwt({ token, account, profile, user }: any) {
-      try {
-        if (account?.provider === "credentials" && user) {
-          token.email = user.email || "";
-          token.fullName = user.fullName || "";
-          token.role = user.role || "user";
-          token.id = user.id || "";
-        }
-
-        // Handle OAuth providers (Google, GitHub)
-        const oauthProviders = ["google", "github"];
-        if (account && oauthProviders.includes(account.provider) && user) {
-          const data = {
-            fullName: user.name || "",
-            email: user.email || "",
-            image: user.image || "",
-            type: account.provider,
-          };
-
-          // Wrap callback in Promise
-          try {
-            await new Promise((resolve, reject) => {
-              const timeout = setTimeout(() => {
-                reject(new Error("OAuth callback timeout"));
-              }, 5000);
-
-              signInWithGoogle(data, (result: any) => {
-                clearTimeout(timeout);
-                if (result && result.status) {
-                  token.fullName = result.data?.fullName || data.fullName;
-                  token.email = result.data?.email || data.email;
-                  token.image = result.data?.image || data.image;
-                  token.type = result.data?.type || data.type;
-                  token.role = result.data?.role || "user";
-                  resolve(result);
-                } else {
-                  // Fallback if callback doesn't return proper structure
-                  token.fullName = data.fullName;
-                  token.email = data.email;
-                  token.image = data.image;
-                  token.type = data.type;
-                  token.role = "user";
-                  resolve({ status: true });
-                }
-              });
-            });
-          } catch (oauthError) {
-            console.error("OAuth callback error:", oauthError);
-            // Fallback values for OAuth
-            token.fullName = user.name || "";
-            token.email = user.email || "";
-            token.image = user.image || "";
-            token.type = account.provider;
-            token.role = "user";
-          }
-        }
-        return token;
-      } catch (error) {
-        console.error("JWT callback error:", error);
-        return token;
+      if (account?.provider === "credentials" && user) {
+        token.email = user.email;
+        token.fullname = user.fullname;
+        token.role = user.role;
       }
-    },
-    async session({ session, token }: any) {
-        try {
-          if (!session.user) {
-              session.user = {};
+
+      // Jika login dengan Google, tambahkan informasi yang diperlukan ke token
+      if (account?.provider === "google") {
+        const data = {
+          fullname: user.name,
+          email: user.email,
+          image: user.image,
+          type: account.provider,
+        };
+
+        await signInWithGoogle(data, (result: any) => {
+          if (result.status) {
+            token.fullname = result.data.fullname;
+            token.email = result.data.email;
+            token.image = result.data.image;
+            token.type = result.data.type;
+            token.role = result.data.role;
           }
+        });
+      }
+      return token;
+    },
 
-          session.user.email = token.email || "";
-          session.user.fullName = token.fullName || "";
-          session.user.image = token.image || "";
-          session.user.role = token.role || "user";
-          session.user.type = token.type || "";
-          session.user.id = token.id || "";
-
-          return session;
-        } catch (error) {
-          console.error("Session callback error:", error);
-          return session;
-        }
+    async session({ session, token }: any) {
+      if (token.email) {
+        session.user.email = token.email;
+      }
+      if (token.fullname) {
+        session.user.fullname = token.fullname;
+      }
+      if (token.image) {
+        session.user.image = token.image;
+      }
+      if (token.role) {
+        session.user.role = token.role;
+      }
+      if (token.type) {
+        session.user.type = token.type;
+      }
+      return session;
     },
   },
 
