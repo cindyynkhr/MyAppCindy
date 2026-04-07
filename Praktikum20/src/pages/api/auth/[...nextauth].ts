@@ -20,26 +20,38 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          if (!credentials?.email || !credentials.password) return null;
-          const user:any = await signIn(credentials.email);
+          console.log("[AUTH] Credentials received:", credentials?.email);
+          
+          if (!credentials?.email || !credentials.password) {
+            console.log("[AUTH] Missing email or password");
+            return null;
+          }
+
+          const user: any = await signIn(credentials.email);
+          console.log("[AUTH] User found:", user ? "yes" : "no");
 
           if (user) {
             const isPasswordValid = await bcrypt.compare(
               credentials.password, 
               user.password,
             );
+            console.log("[AUTH] Password valid:", isPasswordValid);
+
             if (isPasswordValid) {
-              return {
+              const userData = {
                 id: user.id,
                 email: user.email,
-                fullName: user.fullName,
-                role: user.role,
+                fullName: user.fullName || "",
+                role: user.role || "user",
               };
+              console.log("[AUTH] Login successful for:", user.email);
+              return userData;
             }
           }
+          console.log("[AUTH] Login failed");
           return null;
         } catch (error) {
-          console.error("Credentials authorization error:", error);
+          console.error("[AUTH] Credentials authorization error:", error);
           return null;
         }
       },
