@@ -99,7 +99,7 @@ const tampilanLogin = () => {
                             className={style.login_form_item_button}
                             //disabled={isLoading}
                         >
-                            sign in with google
+                            Sign In with Google
                         </button> {" "}
                         <button
                             onClick={() => signIn("github", { callbackUrl, redirect: false })}
