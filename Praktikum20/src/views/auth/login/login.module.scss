@@ -1,0 +1,116 @@
+.login {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    padding: 20px;
+
+    &_title {
+        width: 100%;
+        text-align: center;
+        font-size: 36px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 40px;
+    }
+
+    &_error {
+        color: red;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+    &_form {
+        background: #ffffff;
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        &_item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+
+            &_label {
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #333;
+            }
+
+            &_input {
+                padding: 12px 14px;
+                border-radius: 10px;
+                border: 1px solid #ddd;
+                font-size: 14px;
+                transition: all 0.3s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: #2a5298;
+                    box-shadow: 0 0 0 3px rgba(87, 111, 155, 0.2);
+                }
+            }
+
+            &_button {
+                width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+                border: none;
+                background: #2a5298;
+                color: #ffffff;
+                font-weight: 600;
+                cursor: pointer;
+                transition: 0.3s ease;
+                font-size: 16px;
+                margin-top: 10px;
+
+                &:hover {
+                    background: #1e3c72;
+                    transform: translateY(-2px);
+                }
+            }
+
+            &_text {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 14px;
+                color: #fff;
+
+                a {
+                    color: #2a5298;
+                    text-decoration: none;
+                    font-weight: 600;
+                    transition: 0.3s ease;
+
+                    &:hover {
+                        color: #1e3c72;
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .login {
+        &_form {
+            padding: 30px 20px;
+        }
+
+        &_title {
+            font-size: 26px;
+        }
+    }
+}
