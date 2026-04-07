@@ -32,7 +32,7 @@ const Navbar = () => {
                     </div>
                     <button 
                         className={styles.navbar_button + " " + styles["navbar_button--danger"]}
-                        onClick={() => signOut()}
+                        onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
                     >
                         Sign Out
                     </button>

@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        fullname: { label: "Full Name", type: "text" },
+        fullName: { label: "Full Name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
               return {
                 id: user.id,
                 email: user.email,
-                fullname: user.fullname,
+                fullName: user.fullName,
                 role: user.role,
               };
             }
@@ -54,14 +54,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, profile, user }: any) {
       if (account?.provider === "credentials" && user) {
         token.email = user.email;
-        token.fullname = user.fullname;
+        token.fullName = user.fullName;
         token.role = user.role;
       }
 
       // Jika login dengan Google, tambahkan informasi yang diperlukan ke token
       if (account?.provider === "google") {
         const data = {
-          fullname: user.name,
+          fullName: user.name,
           email: user.email,
           image: user.image,
           type: account.provider,
@@ -69,7 +69,7 @@ export const authOptions: NextAuthOptions = {
 
         await signInWithGoogle(data, (result: any) => {
           if (result.status) {
-            token.fullname = result.data.fullname;
+            token.fullName = result.data.fullName;
             token.email = result.data.email;
             token.image = result.data.image;
             token.type = result.data.type;
@@ -84,8 +84,8 @@ export const authOptions: NextAuthOptions = {
       if (token.email) {
         session.user.email = token.email;
       }
-      if (token.fullname) {
-        session.user.fullname = token.fullname;
+      if (token.fullName) {
+        session.user.fullName = token.fullName;
       }
       if (token.image) {
         session.user.image = token.image;

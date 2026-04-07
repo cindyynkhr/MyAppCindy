@@ -1,12 +1,11 @@
-import TampilanProduk from "../../views/product";
+import DetailProduk from "../../views/detailProduct";
 import { ProductType } from "../../types/product.type";
-import { retrieveProducts } from "../../utils/db/servicefirebase";
 
-const ProdukPage = (props: { products: ProductType[] }) => {
-    const { products } = props;
+const ProdukPage = (props: { product: ProductType }) => {
+    const { product } = props;
     return (
         <div>
-            <TampilanProduk products={products} />
+            <DetailProduk product={product} />
         </div>
     );
 };
@@ -19,7 +18,7 @@ export async function getServerSideProps({ params }: { params: { produk: string 
     //const products = await retrieveProducts("products");
     return {
         props: {
-            products: response.data,
+            product: response.data,
         }
     };
 }
